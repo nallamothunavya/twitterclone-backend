@@ -1,0 +1,10 @@
+namespace Twittertask.Models;
+
+public record User
+{
+    public long Id { get; set; }
+    public string Fullname { get; set; }
+    public string Password { get; set; }
+
+    public string Email { get; set; }
+}
