@@ -55,6 +55,7 @@ public class UserController : ControllerBase
                 Id = existingUser.Id,
                 Email = existingUser.Email,
                 Token = token,
+                Fullname = existingUser.Fullname,
             };
             return Ok(res);
         }

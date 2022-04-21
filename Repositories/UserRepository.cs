@@ -27,7 +27,7 @@ public class UserRepository : BaseRepository, IUserRepository
         WHERE Email = @Email";
 
         using (var con = NewConnection)
-            return await con.QuerySingleOrDefaultAsync<User>(query, new { Email });
+            return await con.QueryFirstOrDefaultAsync<User>(query, new { Email });
     }
 
 
