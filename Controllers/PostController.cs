@@ -110,26 +110,31 @@ public class PostController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Post>>> GetAllPosts([FromQuery] PostParameters postParameters)
     {
-        var allPosts = await _post.GetAll(postParameters);
-        var cacheKey = "postList";
-        //checks if cache entries exists
-        if (!_memoryCache.TryGetValue(cacheKey, out List<Post> postList))
+        var postCache = _memoryCache.Get<List<Post>>(key: "posts");
+        if (postCache is null)
         {
-            //calling the server
-            postList = await _post.ToListAsync();
-
-            //setting up cache options
-            var cacheExpiryOptions = new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = DateTime.Now.AddMinutes(5),
-                Priority = CacheItemPriority.High,
-                SlidingExpiration = TimeSpan.FromMinutes(2)
-            };
-            //setting cache entries
-            _memoryCache.Set(cacheKey, postList, cacheExpiryOptions);
+            postCache = await _post.GetAll(postParameters);
+            _memoryCache.Set(key: "posts", postCache, TimeSpan.FromMinutes(value: 1));
         }
+        // var cacheKey = "postList";
+        // //checks if cache entries exists
+        // if (!_memoryCache.TryGetValue(cacheKey, out List<Post> postList))
+        // {
+        //     //calling the server
+        //     postList = await _post.ToListAsync();
 
-        return Ok(allPosts);
+        //     //setting up cache options
+        //     var cacheExpiryOptions = new MemoryCacheEntryOptions
+        //     {
+        //         AbsoluteExpiration = DateTime.Now.AddMinutes(5),
+        //         Priority = CacheItemPriority.High,
+        //         SlidingExpiration = TimeSpan.FromMinutes(2)
+        //     };
+        //     //setting cache entries
+        //     _memoryCache.Set(cacheKey, postList, cacheExpiryOptions);
+        // }
+
+        return Ok(postCache);
     }
 
     [HttpGet("{id}")]

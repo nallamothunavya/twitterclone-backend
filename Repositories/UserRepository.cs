@@ -13,6 +13,8 @@ public interface IUserRepository
     Task<bool> Update(User Item);
 
     Task<User> GetById(long UserId);
+
+
 }
 public class UserRepository : BaseRepository, IUserRepository
 {
@@ -23,6 +25,8 @@ public class UserRepository : BaseRepository, IUserRepository
 
     public async Task<User> GetByEmail(string Email)
     {
+
+
         var query = $@"SELECT * FROM ""{TableNames.user}"" 
         WHERE Email = @Email";
 
@@ -70,5 +74,6 @@ public class UserRepository : BaseRepository, IUserRepository
                 Id = Id
             });
     }
+
 
 }

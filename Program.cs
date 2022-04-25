@@ -78,16 +78,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseRouting();
+// app.UseRouting();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+// app.UseEndpoints(endpoints =>
+// {
+//     endpoints.MapControllers();
+// });
 
 app.Run();

@@ -8,6 +8,7 @@ using Twittertask.Utilities;
 using Twittertask.DTOs;
 using Twittertask.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Todo.Controllers;
 
@@ -19,12 +20,16 @@ public class UserController : ControllerBase
     private readonly IUserRepository _user;
     private readonly IConfiguration _config;
 
+    private readonly IMemoryCache _memoryCache;
+
     public UserController(ILogger<UserController> logger,
-    IUserRepository user, IConfiguration config)
+    IUserRepository user, IConfiguration config, IMemoryCache memoryCache)
     {
         _logger = logger;
         _user = user;
         _config = config;
+
+        _memoryCache = memoryCache;
     }
     private int GetUserIdFromClaims(IEnumerable<Claim> claims)
     {
@@ -36,26 +41,29 @@ public class UserController : ControllerBase
         [FromBody] UserLoginDTO Data
     )
     {
-        var existingUser = await _user.GetByEmail(Data.Email);
-
-        if (existingUser is null)
+        var userCache = _memoryCache.Get<User>(key: "user");
+        if (userCache is null)
+        {
+            userCache = await _user.GetByEmail(Data.Email);
+        }
+        if (userCache is null)
             return NotFound();
 
         try
         {
-            bool passwordVerify = BCrypt.Net.BCrypt.Verify(Data.Password, existingUser.Password);
+            bool passwordVerify = BCrypt.Net.BCrypt.Verify(Data.Password, userCache.Password);
 
             if (!passwordVerify)
                 return BadRequest("Incorrect password");
 
-            var token = Generate(existingUser);
+            var token = Generate(userCache);
 
             var res = new UserLoginResDTO
             {
-                Id = existingUser.Id,
-                Email = existingUser.Email,
+                Id = userCache.Id,
+                Email = userCache.Email,
                 Token = token,
-                Fullname = existingUser.Fullname,
+                Fullname = userCache.Fullname,
             };
             return Ok(res);
         }
@@ -64,6 +72,7 @@ public class UserController : ControllerBase
             Console.WriteLine(" error while verifying password: " + e.ToString());
             return Ok(" error while verifying password: " + e.ToString());
         }
+
 
     }
 
@@ -130,6 +139,9 @@ public class UserController : ControllerBase
 
         return NoContent();
     }
+
+
+
 
 
 }

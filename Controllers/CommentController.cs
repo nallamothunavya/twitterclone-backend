@@ -5,7 +5,7 @@ using Twittertask.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Twittertask.Utilities;
 using System.Security.Claims;
-
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Twitter.Controllers;
 
@@ -17,11 +17,14 @@ public class CommentController : ControllerBase
     private readonly ILogger<CommentController> _logger;
     private readonly ICommentRepository _comment;
 
+    private readonly IMemoryCache _memoryCache;
+
     public CommentController(ILogger<CommentController> logger,
-    ICommentRepository comment)
+    ICommentRepository comment, IMemoryCache memoryCache)
     {
         _logger = logger;
         _comment = comment;
+        _memoryCache = memoryCache;
     }
 
     private int GetUserIdFromClaims(IEnumerable<Claim> claims)
@@ -73,8 +76,31 @@ public class CommentController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Comment>>> GetAllComments([FromQuery] CommentParameters commentParameters)
     {
-        var allComment = await _comment.GetAll(commentParameters);
-        return Ok(allComment);
+        var commentCache = _memoryCache.Get<List<Comment>>(key: "comments");
+        if (commentCache is null)
+        {
+            commentCache = await _comment.GetAll(commentParameters);
+            _memoryCache.Set(key: "comments", commentCache, TimeSpan.FromMinutes(value: 1));
+        }
+        // var cacheKey = "postList";
+        // //checks if cache entries exists
+        // if (!_memoryCache.TryGetValue(cacheKey, out List<Post> postList))
+        // {
+        //     //calling the server
+        //     postList = await _post.ToListAsync();
+
+        //     //setting up cache options
+        //     var cacheExpiryOptions = new MemoryCacheEntryOptions
+        //     {
+        //         AbsoluteExpiration = DateTime.Now.AddMinutes(5),
+        //         Priority = CacheItemPriority.High,
+        //         SlidingExpiration = TimeSpan.FromMinutes(2)
+        //     };
+        //     //setting cache entries
+        //     _memoryCache.Set(cacheKey, postList, cacheExpiryOptions);
+        // }
+
+        return Ok(commentCache);
     }
 
     [HttpGet("{post_id}")]
