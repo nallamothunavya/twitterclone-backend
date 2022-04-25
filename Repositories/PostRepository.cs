@@ -12,7 +12,11 @@ public interface IPostRepository
     Task<List<Post>> GetAll();
     Task<Post> GetById(long Id);
 
-    Task<List<Post>> GetTweetsByUserId(long UserId);
+    Task<List<Post>> GetPostByUserId(long UserId);
+
+    Task<List<Post>> GetAll(PostParameters postParameters);
+
+    Task<List<Post>> ToListAsync();
 }
 
 public class PostRepository : BaseRepository, IPostRepository
@@ -64,7 +68,7 @@ public class PostRepository : BaseRepository, IPostRepository
             await con.ExecuteAsync(query, Item);
     }
 
-    public async Task<List<Post>> GetTweetsByUserId(long UserId)
+    public async Task<List<Post>> GetPostByUserId(long UserId)
     {
         var query = $@"SELECT * FROM {TableNames.post} WHERE user_id = @UserId";
 
@@ -72,4 +76,30 @@ public class PostRepository : BaseRepository, IPostRepository
             return (await con.QueryAsync<Post>(query, new { UserId })).AsList();
     }
 
+    public async Task<List<Post>> GetAll(PostParameters postParameters)
+    {
+        var query = $@"SELECT * FROM ""{TableNames.post}"" LIMIT @Limit OFFSET @Offset";
+
+        List<Post> res;
+        using (var con = NewConnection)
+            res = (await con.QueryAsync<Post>(query, new { Limit = postParameters.PageSize, Offset = (postParameters.PageNumber - 1) * postParameters.PageSize }))
+            // .Skip((employeeParameters.PageNumber - 1) * employeeParameters.PageSize)
+            // .Take(employeeParameters.PageSize)
+            .AsList();
+
+        return res;
+    }
+
+    public async Task<List<Post>> ToListAsync()
+    {
+        var query = $@"SELECT * FROM ""{TableNames.post}""";
+
+        List<Post> res;
+        using (var con = NewConnection)
+            res = (await con.QueryAsync<Post>(query))
+
+            .AsList();
+
+        return res;
+    }
 }

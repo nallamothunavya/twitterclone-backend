@@ -57,7 +57,7 @@ public record UserUpdateDto
 {
 
 
-    [JsonPropertyName("Fullname")]
+    [JsonPropertyName("full_name")]
 
     public string Fullname { get; set; }
 

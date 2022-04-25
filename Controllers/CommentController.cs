@@ -71,9 +71,16 @@ public class CommentController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Comment>>> GetAllComments()
+    public async Task<ActionResult<List<Comment>>> GetAllComments([FromQuery] CommentParameters commentParameters)
     {
-        var allComment = await _comment.GetAll();
+        var allComment = await _comment.GetAll(commentParameters);
+        return Ok(allComment);
+    }
+
+    [HttpGet("{post_id}")]
+    public async Task<ActionResult<List<Comment>>> GetAllCommentsByPostId([FromRoute] int post_id)
+    {
+        var allComment = await _comment.GetCommentsByPostId(post_id);
         return Ok(allComment);
     }
 }

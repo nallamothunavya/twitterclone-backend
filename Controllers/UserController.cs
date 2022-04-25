@@ -105,9 +105,9 @@ public class UserController : ControllerBase
     }
 
 
-    [HttpPut("id")]
+    [HttpPut]
     [Authorize]
-    public async Task<ActionResult> UpdateUser([FromRoute] long id,
+    public async Task<ActionResult> UpdateUser(
     [FromBody] UserUpdateDto Data)
     {
         var Id = GetUserIdFromClaims(User.Claims);

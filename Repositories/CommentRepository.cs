@@ -14,6 +14,10 @@ public interface ICommentRepository
 
     Task<Comment> GetById(long Id);
 
+    Task<List<Comment>> GetCommentsByPostId(int PostId);
+
+    Task<List<Comment>> GetAll(CommentParameters commentParameters);
+
 }
 
 public class CommentRepository : BaseRepository, ICommentRepository
@@ -48,6 +52,20 @@ public class CommentRepository : BaseRepository, ICommentRepository
             return (await con.QueryAsync<Comment>(query)).AsList();
     }
 
+    public async Task<List<Comment>> GetAll(CommentParameters commentParameters)
+    {
+        var query = $@"SELECT * FROM ""{TableNames.comment}"" LIMIT @Limit OFFSET @Offset";
+
+        List<Comment> res;
+        using (var con = NewConnection)
+            res = (await con.QueryAsync<Comment>(query, new { Limit = commentParameters.PageSize, Offset = (commentParameters.PageNumber - 1) * commentParameters.PageSize }))
+            // .Skip((employeeParameters.PageNumber - 1) * employeeParameters.PageSize)
+            // .Take(employeeParameters.PageSize)
+            .AsList();
+
+        return res;
+    }
+
 
     public async Task<Comment> GetById(long Id)
     {
@@ -55,6 +73,14 @@ public class CommentRepository : BaseRepository, ICommentRepository
 
         using (var con = NewConnection)
             return await con.QuerySingleOrDefaultAsync<Comment>(query, new { Id });
+    }
+
+    public async Task<List<Comment>> GetCommentsByPostId(int PostId)
+    {
+        var query = $@"SELECT * FROM {TableNames.comment} WHERE Post_id = @PostId";
+
+        using (var con = NewConnection)
+            return (await con.QueryAsync<Comment>(query, new { PostId })).AsList();
     }
 
 }
